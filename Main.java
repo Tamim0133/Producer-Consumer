@@ -1,84 +1,90 @@
-
 class Q{
     int num;
-    boolean valueSet = false;
+    boolean produced = false; // Product Produce hoyeche 
 
-    public synchronized void put (int num)
+    public synchronized void produce (int i) // Keep the method Synchronized 
     {
-        while(valueSet) // Jodi Product Create hoyeche but consume hoy nai , wait 
+        while(produced) // Jodi Product Produce Hoye thake then wait 
             try {
                 wait();
             } catch (Exception e) { }
 
-        this.num = num; // Product Create korlam
-            
-        System.out.println("Put : " + num); // Koto Number Product Print Korlam 
+        this.num = i; // new Produce Product 
 
-        valueSet = true; // Product Ache
+        produced = true; // Prooduct Produce hoyeche 
 
-        notify(); // Consumer ke notify 
+        System.out.println("Produced : " + this.num); // New Produced Product Number 
+
+        notify(); // Notify Consumer that the product has been produced 
     }
 
-    
-    public synchronized void get ()
+    public synchronized void consume() // Keep the method Sunchronized 
     {
-        while(!valueSet)
+        while (!produced) { // If the product is not produced yet , then wait 
             try {
                 wait();
-            } catch (Exception e) { }
+            } catch (Exception e) { }   
+        }
 
-        System.out.println("Get : " + num); // Koto Number Product Consume Korlam 
+        System.out.println("Consumed : " + this.num); // now Consume 
 
-        valueSet = false; // Product Nai 
+        produced = false;
 
-        notify(); // Notify Producer to produce more 
+        notify();    // Notify the Producer that the product has been consumed 
     }
 }
 
 class Producer implements Runnable{
+
     Q q;
-    public Producer(Q q) // Constructor is called only once 
+
+    Producer(Q q)
     {
         this.q = q;
-        Thread t = new Thread(this, "Producer");
-        t.start();
     }
 
-    public void run()
-    {
+    @Override 
+    public void run() {
         int i = 0;
-        while(true)
+
+        while(true) // Producer Produces Products 
         {
-            q.put(i++);   // New Product Produced 
-            try{Thread.sleep(2000);}catch(Exception e){}
+            q.produce(i++);
+            try{Thread.sleep(1000);}catch(Exception e){}
         }
+
     }
 }
+
 class Consumer implements Runnable{
     Q q;
-    public Consumer(Q q)
+    Consumer(Q q)
     {
         this.q = q;
-        Thread t = new Thread(this, "Consumer");
-        t.start();
     }
 
-    public void run()
-    {
-        while(true)
+    @Override 
+    public void run() {
+        while(true) // Consumer Consumed the products 
         {
-            q.get();
+            q.consume();
             try{Thread.sleep(1000);}catch(Exception e){}
         }
     }
 }
 
-
-
-public class Main {
+public class Main{
     public static void main(String[] args){
+
         Q q = new Q();
-        new Producer(q);
-        new Consumer(q);
+        
+        Producer p =  new Producer(q);
+        Consumer c =  new Consumer(q);
+
+        Thread producerThread = new Thread(p);
+        Thread consumerThread = new Thread(c);
+
+        producerThread.start();
+        consumerThread.start();
     }
 }
